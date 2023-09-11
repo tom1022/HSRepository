@@ -13,7 +13,7 @@ sudo apt install python3 python3-pip redis ffmpeg
 
 git clone https://github.com/tom1022/HSRepository.git
 
-cd hs-repository
+cd HSRepository
 
 # pyenv等の仮想環境を推奨します
 pip install -r requirements.txt
