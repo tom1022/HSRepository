@@ -11,7 +11,7 @@
 # Redis以外はWindowsでも可
 sudo apt install python3 python3-pip redis ffmpeg
 
-git clone https://github.com/tom1022/hs-repository.git
+git clone https://github.com/tom1022/HSRepository.git
 
 cd hs-repository
 
@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ### 実行方法
 
 ```shellscript
-cd /path/to/hs-repository
+cd /path/to/HSRepository
 flask run
 ```
 
