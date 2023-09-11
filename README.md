@@ -8,12 +8,14 @@
 ### 最低限の導入
 
 ```shellscript
+# Redis以外はWindowsでも可
 sudo apt install python3 python3-pip redis ffmpeg
 
 git clone https://github.com/tom1022/hs-repository.git
 
 cd hs-repository
 
+# pyenv等の仮想環境を推奨します
 pip install -r requirements.txt
 ```
 
