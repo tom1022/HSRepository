@@ -1,0 +1,56 @@
+{{ pagination.info }}
+{{ pagination.links }}
+{% for result in rows %}
+<div class="card m-2">
+    <header class="card-header">
+        <a class="card-header-title has-text-link" href="{{ url_for('user_bp.study', id=result.id)}}">
+            {{ result.name }}
+        </a>
+    </header>
+    <div class="card-content">
+        最終更新日 {{ result.update_at.strftime('%Y年%m月%d日') }}
+        <div class="content limit-2">
+            {{ clean_html(result.summary) }}
+        </div>
+        {% if result.files %}
+        <nav class="panel">
+            <p class="panel-heading">
+                ファイル一覧
+            </p>
+            <div class="card-content">
+                {% for file in result.files %}
+                <a class="panel-block" href="{{ url_for('user_bp.file', id = file.id) }}">
+                    <div class="columns">
+                        <div class="column is-1">
+                            <span class="panel-icon">
+                                {% if file.type == 5 %}
+                                <i class="material-icons">movie</i>
+                                {% elif file.type ==6 %}
+                                <i class="material-icons">image</i>
+                                {% else %}
+                                <i class="material-icons">picture_as_pdf</i>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="column">
+                            <h4>{{ file.name }}</h4>
+                            <span class="limit-1">{{ file.summary }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </nav>
+        {% endif %}
+        <div class="tags">
+            {% for tag in result.tags %}
+            <a href="{{ url_for('user_bp.tag', id = tag.id) }}" class="tag tooltip">
+                {{ tag.name }}
+                <span class="tooltiptext limit-5 box">{{ tag.tips }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{{ pagination.links }}

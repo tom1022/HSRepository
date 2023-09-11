@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve project
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/project
+Environment="PYTHONPATH=/opt/project/bin/python"
+ExecStart=/opt/project/bin/uwsgi --ini /var/www/project/uwsgi.ini
+
+[Install]
+WantedBy=multi-user.target

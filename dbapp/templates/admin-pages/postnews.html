@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>お知らせ作成</h2>
+{% if form.title.errors %}
+{% for error in form.title.errors %}
+<span style="color: red;">{{ error }}</span>
+{% endfor %}
+{% endif %}
+<form id="form" action="{{ url_for('admin_bp.postnews_receive') }}" method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    {{ form.content() }}
+    <div class="field">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="notification">
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endwith %}
+        <div class="field">
+            <label class="label">
+                タイトル
+            </label>
+            <div class="control">
+                {{ form.title(class_="input") }}
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">
+                内容
+            </label>
+            <div class="columns">
+                <div class="column">
+                    {{ form.raw_markdown(class_="textarea", rows="10")}}
+                </div>
+                <div class="column">
+                    <div id="markdown-preview" class="markdown-container"></div>
+                </div>
+            </div>
+        </div>
+        <input value="この内容で追加" type="submit" class="button">
+    </div>
+</form>
+<script>
+    function updateMarkdownPreview() {
+        const markdownContent = $('#raw_markdown').val();
+
+        // MarkdownをHTMLに変換
+        const htmlContent = marked.parse(markdownContent, {
+            gfm: true,
+            tables: true
+        });
+
+        // サニタイズしたHTMLを取得
+        const sanitizedHtml = DOMPurify.sanitize(htmlContent);
+
+        // 変換後のHTMLにBulmaのスタイルを追加
+        const markdownContainer = $('#markdown-preview');
+        markdownContainer.html(sanitizedHtml);
+
+        // タイトルにBulmaのクラスを追加
+        const headings = markdownContainer.find('h1, h2, h3, h4, h5, h6');
+        headings.each(function () {
+            const level = parseInt($(this)[0].tagName.substring(1));
+            $(this).addClass(`title is-${level}`);
+        });
+
+        // リストにBulmaのリストクラスを追加
+        const lists = markdownContainer.find('ul, ol');
+        lists.addClass('list');
+
+        // テーブルにBulmaのテーブルクラスを追加
+        const tables = markdownContainer.find('table');
+        tables.addClass('table');
+
+        // 変換後のHTMLを隠しフィールドに保存
+        $('#content').val(markdownContainer.html());
+    }
+
+    $(document).ready(function () {
+        // 初期表示としてMarkdownプレビューを更新
+        updateMarkdownPreview();
+
+        // textareaの内容が変更されたらMarkdownプレビューを更新
+        $('#raw_markdown').on('input', function () {
+            updateMarkdownPreview();
+        });
+    });
+</script>
+{% endblock %}
