@@ -4,7 +4,7 @@
 <h2>研究グループの編集</h2>
 <div>
     <h3>研究グループの編集</h3>
-    <form id="study_form" action="{{ url_for('logined_bp.edit_study', id = data.id) }}" method="post"
+    <form id="study_form" action="{{ url_for('logined_bp.edit_study_update', id = data.id) }}" method="post"
         enctype="multipart/form-data">
         {{ study_form.csrf_token }}
         {{ study_form.summary }}
@@ -179,7 +179,7 @@
                 tags.push($(this).find('.tag').text());
             });
             $('#tags').val(JSON.stringify(tags));
-            $('form').submit()
+            $('#study_form').submit()
         };
     </script>
 </div>
@@ -207,7 +207,7 @@
 </div>
 <div>
     <h3>編集できるユーザー</h3>
-    <form action="{{ url_for('logined_bp.edit_study', id = data.id) }}" id="del_author_form" method="post"
+    <form action="{{ url_for('logined_bp.edit_study_del_author', id = data.id) }}" id="del_author_form" method="post"
         enctype="multipart/form-data">
         {{ del_author_form.csrf_token }}
         {{ del_author_form.del_author_id }}
@@ -243,7 +243,7 @@
         }
     </script>
     <h3>編集できるユーザーの追加</h3>
-    <form action="{{ url_for('logined_bp.edit_study', id = data.id) }}" id="add_author_form" method="post"
+    <form action="{{ url_for('logined_bp.edit_study_add_author', id = data.id) }}" id="add_author_form" method="post"
         enctype="multipart/form-data">
         {{ add_author_form.csrf_token }}
         <div class="field">

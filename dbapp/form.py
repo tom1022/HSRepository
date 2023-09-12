@@ -8,7 +8,7 @@ from wtforms.validators import InputRequired
 class StudyForm(FlaskForm):
     title = StringField('Title', validators=[InputRequired()])
     before_title = HiddenField('Before_Title')
-    summary = HiddenField('Content', validators=[InputRequired()])
+    summary = HiddenField('Content')
     raw_markdown = TextAreaField('Raw Markdown', validators=[InputRequired()])
     field = SelectField('Field', choices=[(1, '1分野'), (2, '2分野'), (3, '3分野')])
     tags = HiddenField('Tag', id='tags')

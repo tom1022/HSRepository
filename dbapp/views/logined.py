@@ -78,7 +78,7 @@ def create_study():
 
         return render_template('user-pages/create_study.html', title='研究フループの作成(エラー)', form=form)
 
-@logined_bp.route('/edit_study/<id>', methods=['GET', 'POST'])
+@logined_bp.route('/edit_study/<id>', methods=['GET'])
 @login_required
 def edit_study(id):
     if not id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
@@ -91,97 +91,148 @@ def edit_study(id):
     study_form = StudyForm()
     add_author_form = AddAuthorForm()
     del_author_form = DelAuthorForm()
-    if request.method == 'GET':
-        return render_template(
-            'user-pages/edit_study.html',
-            title='研究グループの編集',
-            id=id,
-            summary=summary,
-            study_form=study_form,
-            add_author_form=add_author_form,
-            del_author_form=del_author_form,
-            data=study
-        )
+    return render_template(
+        'user-pages/edit_study.html',
+        title='研究グループの編集',
+        id=id,
+        summary=summary,
+        study_form=study_form,
+        add_author_form=add_author_form,
+        del_author_form=del_author_form,
+        data=study
+    )
 
-    if request.method == 'POST':
-        if study_form.validate_on_submit():
-            try:
-                form_title = study_form.title.data
-                form_summary = study_form.summary.data
-                form_raw_markdown = study_form.raw_markdown.data
-                form_tags = re.sub('(\[|\'|\]|\s)', '', study_form.tags.data).split(',')
-                form_field = int(study_form.field.data)
 
-                tag_list = []
-                for tag in form_tags:
-                    tag = tag.replace('"', '')
-                    check = TAGS.query.filter(TAGS.name == tag).first()
-                    if check is None:
-                        tagtip = wikipedia_summary(tag)
-                        add_tag = TAGS(
-                            name=tag,
-                            tips=tagtip
-                        )
-                        db.session.add(add_tag)
-                        db.session.commit()
-                    tag_list.append(TAGS.query.filter(TAGS.name == tag).first())
+@logined_bp.route('/edit_study/<id>/update', methods=['POST'])
+@login_required
+def edit_study_update(id):
+    if not id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
+        abort(403)
+    study = STUDIES.query.filter(STUDIES.id==id).one_or_none()
+    if study is None:
+        abort(404)
+    study_form = StudyForm()
+    add_author_form = AddAuthorForm()
+    del_author_form = DelAuthorForm()
+    if study_form.validate_on_submit():
+        try:
+            form_title = study_form.title.data
+            form_summary = study_form.summary.data
+            form_raw_markdown = study_form.raw_markdown.data
+            form_tags = re.sub('(\[|\'|\]|\s)', '', study_form.tags.data).split(',')
+            form_field = int(study_form.field.data)
 
-                study.name = form_title
-                study.summary = form_summary
-                study.raw_markdown = form_raw_markdown
-                study.field = form_field
-                study.tags = tag_list
+            tag_list = []
+            for tag in form_tags:
+                tag = tag.replace('"', '')
+                check = TAGS.query.filter(TAGS.name == tag).first()
+                if check is None:
+                    tagtip = wikipedia_summary(tag)
+                    add_tag = TAGS(
+                        name=tag,
+                        tips=tagtip
+                    )
+                    db.session.add(add_tag)
+                    db.session.commit()
+                tag_list.append(TAGS.query.filter(TAGS.name == tag).first())
 
-                parent = STUDIES.query.filter(STUDIES.id==id).one()
-                parent.update_at = datetime.now()
+            study.name = form_title
+            study.summary = form_summary
+            study.raw_markdown = form_raw_markdown
+            study.field = form_field
+            study.tags = tag_list
 
-                db.session.flush()
-                db.session.commit()
+            parent = STUDIES.query.filter(STUDIES.id==id).one()
+            parent.update_at = datetime.now()
 
-            except Exception as e:
-                flash(e)
-                db.session.rollback()
+            db.session.flush()
+            db.session.commit()
 
-            return redirect(url_for('logined_bp.edit_study', id=id))
+        except Exception as e:
+            flash(e)
+            db.session.rollback()
 
-        if del_author_form.validate_on_submit():
-            form_user_id = del_author_form.del_author_id.data
+        return redirect(url_for('logined_bp.edit_study', id=id))
 
-            try:
-                study.authors.remove(USERS.query.filter(USERS.id==form_user_id).one())
+    return render_template(
+        'user-pages/edit_study.html',
+        title='研究グループの編集(エラー)',
+        study_form=study_form,
+        add_author_form=add_author_form,
+        del_author_form=del_author_form,
+        data=study
+    )
 
-                db.session.flush()
-                db.session.commit()
 
-            except Exception as e:
-                flash(e)
-                db.session.rollback()
+@logined_bp.route('/edit_study/<id>/del_author', methods=['POST'])
+@login_required
+def edit_study_del_author(id):
+    if not id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
+        abort(403)
+    study = STUDIES.query.filter(STUDIES.id==id).one_or_none()
+    if study is None:
+        abort(404)
+    study_form = StudyForm()
+    add_author_form = AddAuthorForm()
+    del_author_form = DelAuthorForm()
+    if del_author_form.validate_on_submit():
+        form_user_id = del_author_form.del_author_id.data
 
-            return redirect(url_for('logined_bp.edit_study', id=id))
+        try:
+            study.authors.remove(USERS.query.filter(USERS.id==form_user_id).one())
 
-        if add_author_form.validate_on_submit():
-            form_user_id = add_author_form.add_author_id.data
+            db.session.flush()
+            db.session.commit()
 
-            try:
-                study.authors.append(USERS.query.filter(USERS.id==form_user_id).one())
+        except Exception as e:
+            flash(e)
+            db.session.rollback()
 
-                db.session.flush()
-                db.session.commit()
+        return redirect(url_for('logined_bp.edit_study', id=id))
 
-            except Exception as e:
-                flash(e)
-                db.session.rollback()
+    return render_template(
+        'user-pages/edit_study.html',
+        title='研究グループの編集(エラー)',
+        study_form=study_form,
+        add_author_form=add_author_form,
+        del_author_form=del_author_form,
+        data=study
+    )
 
-            return redirect(url_for('logined_bp.edit_study', id=id))
+@logined_bp.route('/edit_study/<id>/add_author', methods=['POST'])
+@login_required
+def edit_study_add_author(id):
+    if not id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
+        abort(403)
+    study = STUDIES.query.filter(STUDIES.id==id).one_or_none()
+    if study is None:
+        abort(404)
+    study_form = StudyForm()
+    add_author_form = AddAuthorForm()
+    del_author_form = DelAuthorForm()
+    if add_author_form.validate_on_submit():
+        form_user_id = add_author_form.add_author_id.data
 
-        return render_template(
-            'user-pages/edit_study.html',
-            title='研究グループの編集(エラー)',
-            study_form=study_form,
-            add_author_form=add_author_form,
-            del_author_form=del_author_form,
-            data=study
-        )
+        try:
+            study.authors.append(USERS.query.filter(USERS.id==form_user_id).one())
+
+            db.session.flush()
+            db.session.commit()
+
+        except Exception as e:
+            flash(e)
+            db.session.rollback()
+
+        return redirect(url_for('logined_bp.edit_study', id=id))
+
+    return render_template(
+        'user-pages/edit_study.html',
+        title='研究グループの編集(エラー)',
+        study_form=study_form,
+        add_author_form=add_author_form,
+        del_author_form=del_author_form,
+        data=study
+    )
 
 @logined_bp.route('/edit_study/<parent_id>/upload', methods=['GET', 'POST'])
 @login_required
