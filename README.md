@@ -15,13 +15,13 @@ git clone https://github.com/tom1022/HSRepository.git
 
 cd HSRepository
 
-# pyenv等の仮想環境を推奨します
+# virtualenv等の仮想環境を推奨します
 pip install -r requirements.txt
 ```
 
 ### 設定方法
 
-ディレクトリ直下にある`config.default.yml`を参考に`config.yml`としてコピーし設定例を参考に設定してください
+`configs/`にある`config.default.yml`を参考に`config.yml`としてコピーし設定例を参考に設定してください
 
 ### 実行方法
 
@@ -34,4 +34,4 @@ flask run
 
 このリポジトリはアマチュアによって作成されたので美しく効率的なコードとは程遠いです
 
-現在は開発中のため推奨はしませんが`configs/`にApacheやuwsgiの設定用ファイルが有るため一応運用はできます
+現在は開発中のため推奨はしませんが`sample_configs/`にApacheやuwsgiの設定用ファイルが有るため一応運用はできます
