@@ -80,8 +80,7 @@ def login():
                         role = 'Admin'
                     elif ad_config['groups']['Student'] in ADUser['groups']:
                         role = 'Student'
-                    else:
-                        abort(500)
+
                     role = ROLES.query.filter(ROLES.name==role).one()
 
                     user = USERS(
