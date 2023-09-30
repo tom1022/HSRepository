@@ -18,7 +18,7 @@
             <p class="level-item">{{ news.create_at.strftime('%Y年%m月%d日') }}</p>
         </div>
     </div>
-    <p class="limit-1">{{ clean_html(news.content) }}</p>
+    <p class="limit-1">{{ clean_html(convertMarkdown(news.raw_markdown)) }}</p>
     {% endfor %}
 </ul>
 {{ pagination.links }}

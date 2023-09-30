@@ -88,6 +88,7 @@ def init():
     return redirect(url_for('user_bp.index'))
 
 from .tools import clean_html
+from .tools import convertMarkdown
 
 @app.context_processor
 def global_variables():
@@ -97,4 +98,5 @@ def global_variables():
         'newslist': newslist,
         'TITLE': title,
         'clean_html': clean_html,
+        'convertMarkdown': convertMarkdown
     }

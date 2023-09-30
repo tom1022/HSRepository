@@ -47,48 +47,22 @@
     </div>
 </form>
 <script>
-    function updateMarkdownPreview() {
-        const markdownContent = $('#raw_markdown').val();
-
-        // MarkdownをHTMLに変換
-        const htmlContent = marked.parse(markdownContent, {
-            gfm: true,
-            tables: true
-        });
-
-        // サニタイズしたHTMLを取得
-        const sanitizedHtml = DOMPurify.sanitize(htmlContent);
-
-        // 変換後のHTMLにBulmaのスタイルを追加
-        const markdownContainer = $('#markdown-preview');
-        markdownContainer.html(sanitizedHtml);
-
-        // タイトルにBulmaのクラスを追加
-        const headings = markdownContainer.find('h1, h2, h3, h4, h5, h6');
-        headings.each(function () {
-            const level = parseInt($(this)[0].tagName.substring(1));
-            $(this).addClass(`title is-${level}`);
-        });
-
-        // リストにBulmaのリストクラスを追加
-        const lists = markdownContainer.find('ul, ol');
-        lists.addClass('list');
-
-        // テーブルにBulmaのテーブルクラスを追加
-        const tables = markdownContainer.find('table');
-        tables.addClass('table');
-
-        // 変換後のHTMLを隠しフィールドに保存
-        $('#content').val(markdownContainer.html());
-    }
-
     $(document).ready(function () {
-        // 初期表示としてMarkdownプレビューを更新
-        updateMarkdownPreview();
-
-        // textareaの内容が変更されたらMarkdownプレビューを更新
         $('#raw_markdown').on('input', function () {
-            updateMarkdownPreview();
+            $.ajax({
+                url: "{{ url_for('api_bp.convert') }}",
+                type: 'post',
+                cache: false,
+                dataType: 'json',
+                data: {
+                    markdown: $('#raw_markdown').val()
+                }
+            }).done(function (res) {
+                $("#markdown-preview").html(res.markdown);
+                $("#summary").val(res.markdown);
+            }).fail(function (res) {
+                console.error(res.responseJSON);
+            });
         });
     });
 </script>
