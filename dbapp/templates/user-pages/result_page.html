@@ -22,5 +22,6 @@
             {% endif %}
         </tr>
     </tbody>
+    <a href="{{ url_for('logined_bp.edit_study', id = result['parent_id']) }}">研究グループの編集に戻る</a>
 </table>
 {% endblock %}
