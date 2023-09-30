@@ -25,6 +25,47 @@ def convertMarkdown(text):
     md = markdown.Markdown(extensions=['tables', 'fenced_code', 'codehilite', 'attr_list', 'footnotes', 'toc'])
     return bleach.clean(md.convert(text), **bleach_config)
 
+# STUDIESのFILESエントリから削除されたものを非表示にして返す
+def FilterStudyFiles(study, admin):
+    # ファイルを更新日時の降順でソートする
+    files = sorted(study.files, key=lambda file: file.create_at, reverse=True)
+    if not admin:
+        # 削除されていないファイルのみを選択する
+        selected_files = []
+        for file in files:
+            if file.grave_data == False:
+                selected_files.append(file)
+        # 研究オブジェクトのfiles属性を書き換える
+        study.files = selected_files
+    # 研究オブジェクトを返す
+    return study
+
+# 複数のSTUDIESのFILESエントリから削除されたものを非表示にして返す
+def FilterStudiesHiddenFiles(studies, admin):
+    # フィルターした研究オブジェクトのリストを作成する
+    filtered_studies = []
+    # リストから研究オブジェクトを取り出す
+    for study in studies:
+        # ファイルを更新日時の降順でソートする
+        files = sorted(study.files, key=lambda file: file.create_at, reverse=True)
+        # カウンターを初期化する
+        count = 0
+        # 削除されていない上位3ファイルのみを選択する
+        selected_files = []
+        for file in files:
+            if file.grave_data == False or admin:
+                selected_files.append(file)
+                count += 1
+                if count == 4:
+                    break
+        # 研究オブジェクトのfiles属性を書き換える
+        study.files = selected_files
+        # フィルターした研究オブジェクトのリストに追加する
+        filtered_studies.append(study)
+    # フィルターした研究オブジェクトのリストを返す
+    return filtered_studies
+
+
 # SEARCH ENGIN
 from sqlalchemy import or_, and_
 
@@ -34,7 +75,8 @@ def SearchEngine(
         update_at_range=None,
         create_at_range=None,
         field=0,
-        sort_column="update_at"
+        sort_column="update_at",
+        admin=False
     ):
     # STUDIESとFILESのJOINを作成します。
     query = db.session.query(STUDIES).outerjoin(FILES)
@@ -56,6 +98,9 @@ def SearchEngine(
                 word_conditions.append(column.ilike(f"%{word}%"))
             search_conditions.append(or_(*word_conditions))
         search_filters.append(and_(*search_conditions))
+
+    if not admin:
+        search_filters.append(STUDIES.grave_data == False)
 
     if update_at_range:
         # STUDIESのupdate_atの範囲指定
@@ -89,15 +134,19 @@ def SearchEngine(
     # 結果を返します。FILESオブジェクトも取得します。
     studies = query.all()
 
+    filtered_studies = FilterStudiesHiddenFiles(studies, admin)
+
     # 空の場合はタイトルを変えて返します。
     if not search_terms:
-        return [studies, "研究一覧"]
+        return [filtered_studies, "研究一覧"]
 
     # FILESオブジェクトを取得します。
     for study in studies:
         study.files = db.session.query(FILES).filter(FILES.study_id==study.id, or_(*[or_(FILES.summary.contains(f"%{term}%"), FILES.content.contains(f"%{term}%")) for term in search_words])).all()
 
-    return [studies, '"' + search_terms + '"の検索結果']
+    filtered_studies = FilterStudiesHiddenFiles(studies, admin)
+
+    return [filtered_studies, '"' + search_terms + '"の検索結果']
 
 import wikipedia
 from nltk.corpus import wordnet

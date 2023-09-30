@@ -19,6 +19,9 @@
             </p>
             <div class="card-content">
                 {% for file in result.files %}
+                {% if loop.index == 4 %}
+                <a class="panel-block" href="{{ url_for('user_bp.study', id = result.id) }}" class="has-text-link">更に表示する</a>
+                {% else %}
                 <a class="panel-block" href="{{ url_for('user_bp.file', id = file.id) }}">
                     <div class="columns">
                         <div class="column is-1">
@@ -38,6 +41,7 @@
                         </div>
                     </div>
                 </a>
+                {% endif%}
                 {% endfor %}
             </div>
         </nav>

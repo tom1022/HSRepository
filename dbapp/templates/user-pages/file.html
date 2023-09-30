@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+
+{% if data.grave_data %}
+<div class="notification is-warning">このファイルは非公開または削除にされています</div>
+{% endif %}
 <h2 class="title">{{ data.name }}</h2>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
@@ -37,7 +41,11 @@
         {% if current_user.has_role('Admin') %}
         <tr>
             <th>作成者</th>
-            <td>{{ data.author[0].display_name }}</td>
+            <td>
+                <div class="tags">
+                <a href="{{ url_for('admin_bp.user_detail', id = data.author[0].id) }}" class="tag is-info is-light">{{ data.author[0].display_name }}</a>
+                </div>
+            </td>
         </tr>
         {% endif%}
         {% endif %}

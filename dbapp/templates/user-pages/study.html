@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+
+{% if data.grave_data %}
+<div class="notification is-warning">この研究は非公開または削除にされています</div>
+{% endif %}
 <h2 class="title">{{ data.name }}</h2>
 {% if editable %}
 <a href="{{ url_for('logined_bp.edit_study', id = data.id)}}" class="button is-primary">この研究を編集する</a>
@@ -56,7 +60,13 @@
         {% if current_user.has_role('Admin') %}
         <tr>
             <th>作成者</th>
-            <td>{{ data.authors[0].display_name }}</td>
+            <td>
+                {% for author in data.authors %}
+                <div class="tags">
+                <a href="{{ url_for('admin_bp.user_detail', id = author.id) }}" class="tag is-info is-light">{{ author.display_name }}</a>
+                </div>
+                {% endfor %}
+            </td>
         </tr>
         {% endif%}
         {% endif %}
@@ -113,7 +123,6 @@
         <div class="column is-1"></div>
         <div class="column is-2">
             <a href="javascript:vote('unhelpful')" class="button is-warning is-outlined">
-                <span id="unhelpful_votes">{{ unhelpful_votes }}</span>
                 {% if user_vote.helpful is false %}
                 <i id="unhelpful" class="material-icons">thumb_down</i>
                 {% else %}
@@ -135,7 +144,6 @@
                 }).done(function (response, textStatus) {
                     console.log(response);
                     $('#helpful_votes').text(response.helpful);
-                    $('#unhelpful_votes').text(response.unhelpful);
                     if (response.helpful == true) {
                         $('#helpful').removeClass('outlined');
                         $('#unhelpful').addClass('outlined');

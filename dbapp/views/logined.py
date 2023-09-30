@@ -1,17 +1,19 @@
 import os, ulid, json, re
-from flask import Blueprint, render_template, jsonify, request, abort
+from flask import Blueprint, render_template, jsonify, request, abort, url_for, redirect, flash
 from flask_login import login_required, current_user
 from flask_paginate import get_page_parameter, Pagination
 from werkzeug.utils import secure_filename
 from cv2 import VideoCapture
+from PIL import Image, UnidentifiedImageError
 from datetime import datetime
 from dbapp import app, db
 from dbapp.models.tables import USERS, FILES, STUDIES, TAGS, VOTES, FILEACCESS
 from dbapp.form import UploadForm, StudyForm, AddAuthorForm, DelAuthorForm, FileEditForm
 from dbapp.file_operation.pdf import PDF_extractor
-from dbapp.tools import wikipedia_summary, sha256_hash, convertMarkdown
+from dbapp.tools import wikipedia_summary, sha256_hash, convertMarkdown, FilterStudiesHiddenFiles
 from flask import url_for, redirect, flash
 from PIL import Image, UnidentifiedImageError
+from dbapp.tools import wikipedia_summary, sha256_hash
 
 logined_bp = Blueprint('logined_bp', __name__, template_folder='templates')
 
@@ -72,7 +74,7 @@ def create_study():
                 reason = e
                 db.session.rollback()
 
-            result = {'status': status, 'reason': reason, 'id': id}
+            result = {'status': status, 'reason': reason, 'id': id, 'name': form_title}
 
             return render_template('user-pages/result_study.html', title='結果', result=result)
 
@@ -290,6 +292,9 @@ def upload(parent_id):
                     
                     form_type = 6
                     check_png.close()
+                
+                else:
+                    raise Exception("不正なファイルがアップロードされました")
 
                 filehash = sha256_hash(savepath)
 
@@ -342,7 +347,8 @@ def upload(parent_id):
 
                 db.session.rollback()
 
-            result = {'status': status, 'name': name, 'reason': reason, 'id': file_id}
+            result = {'status': status, 'name': name, 'reason': reason, 'id': file_id, 'parent_id': parent_id}
+            print(result)
 
             return render_template('user-pages/result_page.html', title='結果', result=result)
 
@@ -351,11 +357,12 @@ def upload(parent_id):
 @logined_bp.route('/edit_file/<id>', methods=['GET', 'POST'])
 @login_required
 def edit_file(id):
-    if not id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
-        abort(403)
     file = FILES.query.filter(FILES.id==id).one_or_none()
     if not file:
         abort(404)
+
+    if not file.study_id in [x.id for x in current_user.studies] and not current_user.has_role('Admin'):
+        abort(403)
 
     form = FileEditForm()
     if request.method == 'GET':
@@ -441,7 +448,7 @@ def mystudies():
     rows = results[(page - 1)*10: page*10]
     pagination = Pagination(page=page, total=len(results), per_page=10, css_framework="BULMA")
 
-    return render_template('user-pages/pagelist.html', title="あなたのページ", rows=rows, pagination=pagination)
+    return render_template('user-pages/pagelist.html', title="自分の研究", rows=rows, pagination=pagination)
 
 @logined_bp.route('/visited_pages', methods=['GET'])
 @login_required

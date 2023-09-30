@@ -2,18 +2,19 @@ import os, bleach, markdown
 from flask import Blueprint, render_template, request, redirect, send_file, abort, session, make_response, url_for, Markup
 from flask_paginate import Pagination, get_page_parameter
 from flask_login import current_user
-from sqlalchemy import desc, func
+from sqlalchemy import desc, not_, func
 from datetime import datetime
 from dbapp import app, db
 from dbapp.models.tables import FILES, TAGS, VOTES, NEWS, STUDIES, FILEACCESS, FILEPREVIEW
-from dbapp.tools import convertMarkdown, SearchEngine
+from dbapp.tools import convertMarkdown, SearchEngine, FilterStudyFiles, FilterStudiesHiddenFiles
+from dbapp.models.tables import FILES, TAGS, VOTES, NEWS, STUDIES, FILEACCESS, FILEPREVIEW, STUDYGRAVES, FILEGRAVES
 
 user_bp = Blueprint('user_bp', __name__, template_folder='templates')
 
 @user_bp.route('/')
 def index():
-    access_rank = STUDIES.query.join(FILES).group_by(STUDIES.id).order_by(desc(func.sum(FILES.access_count))).limit(10).all()
-    preview_rank = STUDIES.query.join(FILES).group_by(STUDIES.id).order_by(desc(func.sum(FILES.preview_count))).limit(10).all()
+    access_rank = STUDIES.query.join(FILES).filter(STUDIES.grave_data==False).group_by(STUDIES.id).order_by(desc(func.sum(FILES.access_count))).limit(10).all()
+    preview_rank = STUDIES.query.join(FILES).filter(STUDIES.grave_data==False).group_by(STUDIES.id).order_by(desc(func.sum(FILES.preview_count))).limit(10).all()
     helpful_rank = db.session.query(
         STUDIES.id,
         STUDIES.name,
@@ -22,6 +23,8 @@ def index():
     ).outerjoin(
         VOTES,
         VOTES.study_id == STUDIES.id
+    ).filter(
+        STUDIES.grave_data==False
     ).group_by(
         STUDIES.id
     ).order_by(
@@ -47,6 +50,13 @@ def study(id):
     if data is None:
         abort(404)
 
+    grave = STUDYGRAVES.query.filter(STUDYGRAVES.study_id==data.id).one_or_none()
+    admin = False
+    if current_user.is_authenticated:
+        admin = current_user.has_role('Admin')
+    if grave is not None and not admin:
+        return render_template("user-pages/grave.html", title="削除された研究", data=grave), 404
+
     votes = VOTES.query.filter(VOTES.study_id==data.id)
     helpful_votes = votes.filter(VOTES.helpful==True).count()
     unhelpful_votes = votes.count() - helpful_votes
@@ -65,7 +75,7 @@ def study(id):
     return render_template(
         'user-pages/study.html',
         title=data.name,
-        data=data,
+        data=FilterStudyFiles(data, admin),
         summary=summary,
         helpful_votes=helpful_votes,
         unhelpful_votes=unhelpful_votes,
@@ -78,6 +88,17 @@ def file(id):
     data = FILES.query.filter(FILES.id == id).one_or_none()
     if data is None:
         abort(404)
+
+    grave = FILEGRAVES.query.filter(FILEGRAVES.file_id==data.id).one_or_none()
+    admin = False
+    if current_user.is_authenticated:
+        admin = current_user.has_role('Admin')
+    if grave is not None and not admin:
+        return render_template("user-pages/grave.html", title="削除されたファイル", data=grave), 404
+    parent_grave = STUDYGRAVES.query.filter(STUDYGRAVES.study_id==data.study_id).one_or_none()
+    if parent_grave is not None and not admin:
+        return render_template("user-pages/grave.html", title="削除された研究", data=parent_grave), 404
+
 
     # セッションにアクセス情報がまだ存在しない場合、アクセス情報をセッションに追加
     if 'accessed_files' not in session:
@@ -117,6 +138,13 @@ def preview(id):
     data = FILES.query.filter(FILES.id == id).one_or_none()
     if data is None:
         abort(404)
+
+    grave = FILEGRAVES.query.filter(FILEGRAVES.file_id==data.id).one_or_none()
+    admin = False
+    if current_user.is_authenticated:
+        admin = current_user.has_role('Admin')
+    if grave is not None and not admin:
+        return render_template("user-pages/grave.html", title="削除されたファイル", data=grave), 404
 
     # セッションにプレビュー情報がまだ存在しない場合、プレビュー情報をセッションに追加
     if 'previewed_files' not in session:
@@ -174,9 +202,11 @@ def news(id=''):
     if news is None:
         abort(404)
 
+    news_text = convertMarkdown(news.raw_markdown)
+
     title = news.name
 
-    return render_template('user-pages/news.html', title=title, news=news)
+    return render_template('user-pages/news.html', title=title, news_text=news_text, news=news)
 
 @user_bp.route('/search', methods=['GET'])
 def search():
@@ -202,13 +232,18 @@ def search():
     create_at_range = (datetime.strptime(create_date_start, '%Y-%m-%d'), datetime.strptime(create_date_end, '%Y-%m-%d'))
     update_at_range = (datetime.strptime(update_date_start, '%Y-%m-%d'), datetime.strptime(update_date_end, '%Y-%m-%d'))
 
+    admin = False
+    if current_user.is_authenticated:
+        admin = current_user.has_role('Admin')
+
     result_pages = SearchEngine(
         search_terms=raw_query,
         ascending=ascending,
         create_at_range=create_at_range,
         update_at_range=update_at_range,
         sort_column=sort_column,
-        field=field
+        field=field,
+        admin=admin
     )
 
     page = request.args.get(get_page_parameter(), type=int, default=1)
@@ -231,12 +266,24 @@ def tag(id=None):
     else:
         results = TAGS.query.filter(TAGS.id==id).one_or_none()
 
-        tips = results.tips.split('\n')
         if results is None:
             abort(404)
+        tips = results.tips.split('\n')
         page = request.args.get(get_page_parameter(), type=int, default=1)
-        rows = results.studies[(page - 1)*10: page*10]
-        pagination = Pagination(page=page, total=len(results.studies), per_page=10, css_framework="BULMA")
+        admin = False
+        if current_user.is_authenticated:
+            admin = current_user.has_role('Admin')
+
+        filtered_studies = []
+        for study in results.studies:
+            if study.grave_data == False:
+                filtered_studies.append(study)
+
+        results.studies = filtered_studies
+
+        studies = FilterStudiesHiddenFiles(results.studies, admin)
+        rows = studies[(page - 1)*10: page*10]
+        pagination = Pagination(page=page, total=len(studies), per_page=10, css_framework="BULMA")
         return render_template(
             'user-pages/tag.html',
             title=results.name,

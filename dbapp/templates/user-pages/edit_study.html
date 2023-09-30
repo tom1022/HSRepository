@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
 
+{% if data.grave_data %}
+<div class="notification is-warning">この研究は非公開または削除にされています</div>
+{% endif %}
 <h2>研究グループの編集</h2>
 <div>
     <h3>研究グループの編集</h3>

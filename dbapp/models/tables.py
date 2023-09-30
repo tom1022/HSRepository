@@ -22,6 +22,7 @@ class STUDIES(db.Model, ModelBase):
     summary = db.Column(db.Text())
     raw_markdown = db.Column(db.Text())
     field = db.Column(db.Integer)
+    grave_data = db.Column(db.Boolean, default = False)
 
     tags = relationship('TAGS', secondary='study_tag', back_populates='studies')
     files = relationship('FILES', back_populates='study')
@@ -58,6 +59,7 @@ class FILES(db.Model, ModelBase):
     access_count = db.Column(db.Integer, default = 0)
     preview_count = db.Column(db.Integer, default = 0)
     content = db.Column(db.Text())
+    grave_data = db.Column(db.Boolean, default = False)
     
     study_id = db.Column(db.String(26), ForeignKey('studies.id'))
     study = relationship('STUDIES')
@@ -91,16 +93,16 @@ class VOTES(db.Model):
 
 class FILEACCESS(db.Model):
     __tablename__ = 'fileaccess'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id'))
+    id = db.Column(db.String(26), primary_key=True, default = ulid_new_str)
+    user_id = db.Column(db.String(26), db.ForeignKey('users.id'))
+    file_id = db.Column(db.String(26), db.ForeignKey('files.id'))
     accessed_at = db.Column(db.DateTime, default=datetime.now)
 
 class FILEPREVIEW(db.Model):
     __tablename__ = 'filepreview'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id'))
+    id = db.Column(db.String(26), primary_key=True, default = ulid_new_str)
+    user_id = db.Column(db.String(26), db.ForeignKey('users.id'))
+    file_id = db.Column(db.String(26), db.ForeignKey('files.id'))
     previewed_at = db.Column(db.DateTime, default=datetime.now)
 
 class NEWS(db.Model):
