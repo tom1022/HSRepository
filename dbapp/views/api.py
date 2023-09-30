@@ -22,7 +22,7 @@ def tag_search():
 def file_receive():
     pdf = PDF_extractor(request.files['file'])
 
-    return jsonify({"status": "ok", "title":pdf["title"], "pubyear":pdf["pubyear"]})
+    return jsonify({"status": "ok", "pubyear":pdf["pubyear"]})
 
 
 @api.route('/convert', methods=['POST'])

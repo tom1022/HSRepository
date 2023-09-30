@@ -1,7 +1,6 @@
 import io
 import re
 from datetime import datetime
-from statistics import mode
 
 from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LAParams, LTChar, LTTextBoxHorizontal, LTTextLineHorizontal
@@ -61,9 +60,7 @@ def PDF_extractor(file_obj):
 
         content = "\n".join(texts)
 
-        summary = [t[1] for t in text_fontsize if t[0] == mode(font_sizes)][0]
-
-        result = {"content": content, "summary": summary, "pubyear": pubyear_jp}
+        result = {"content": content, "pubyear": pubyear_jp}
 
     except Exception as e:
         print(e)
