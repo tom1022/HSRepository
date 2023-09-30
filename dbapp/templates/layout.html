@@ -37,7 +37,9 @@
                         <div class="navbar-dropdown" role="menu">
                             <a href="{{ url_for('logined_bp.mypage') }}" class="navbar-item">マイページ</a>
                             {% if current_user.has_role('Admin') %}
+                            <a href="{{ url_for('admin_bp.index') }}" class="navbar-item">管理者ページ</a>
                             <a href="{{ url_for('admin_bp.postnews') }}" class="navbar-item">お知らせ作成</a>
+                            <a href="{{ url_for('admin_bp.role') }}" class="navbar-item">管理者ユーザーの管理</a>
                             {% endif %}
                             <a href="{{ url_for('auth_bp.logout') }}" class="navbar-item">ログアウト</a>
                         </div>
@@ -58,6 +60,11 @@
                 </a>
             </div>
         </section>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="menu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
         <nav class="navbar">
             <div class="navbar-menu mx-4">
                 <div class="navbar-start">
@@ -98,11 +105,6 @@
                 </div>
             </div>
         </nav>
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="menu">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </a>
 
         <script>
             $(function () {
@@ -272,7 +274,7 @@
                 {% for news in newslist %}
                 <hr>
                 <h4><a href="{{ url_for('user_bp.news', id=news.id) }}">{{ news.name }}</a></h4>
-                <p class="limit-3">{{ clean_html(news.content) }}</p>
+                <p class="limit-3">{{ clean_html(convertMarkdown(news.raw_markdown)) }}</p>
                 {% endfor %}
             </div>
         </div>
@@ -280,8 +282,7 @@
     </div>
     <footer class="footer has-background-info-light">
         <div class="container">
-            このサイトは現在試験運転中です。ファイルやページにエラーが発生する可能性や読み込みが遅いなどの問題が発生する場
-            合があります。
+            このサイトは現在試験運用中です。ファイルやページにエラーが発生する可能性や読み込みが遅いなどの問題が発生する場合があります。
             <br>
             予めご了承ください。
         </div>

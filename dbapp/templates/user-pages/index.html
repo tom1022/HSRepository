@@ -13,7 +13,7 @@
         {% for study in access_rank %}
         <tr>
             <td>{{ loop.index }}</td>
-            <td class="ellipsis"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
+            <td class="limit-1"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
             <td>{{ study.get_total_access_count() }}</td>
         </tr>
         {% endfor %}
@@ -32,7 +32,7 @@
         {% for study in preview_rank %}
         <tr>
             <td>{{ loop.index }}</td>
-            <td class="ellipsis"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
+            <td class="limit-1"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
             <td>{{ study.get_total_preview_count() }}</td>
         </tr>
         {% endfor %}
@@ -50,7 +50,7 @@
         {% for study in helpful_rank %}
         <tr>
             <td>{{ loop.index }}</td>
-            <td class="ellipsis"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
+            <td class="limit-1"><a href="{{ url_for('user_bp.study', id = study.id) }}">{{ study.name }}</a></td>
         </tr>
         {% endfor %}
     </table>

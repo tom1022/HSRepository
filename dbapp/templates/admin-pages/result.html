@@ -10,7 +10,7 @@
     </thead>
         {% for page in result["success"] %}
             <tr>
-                <td class="ellipsis"><a href="/page/{{ page['id'] }}">{{ page['title'] }}</a></td>
+                <td class="limit-1"><a href="/page/{{ page['id'] }}">{{ page['title'] }}</a></td>
             </tr>
         {% endfor %}
     </table>
@@ -26,7 +26,7 @@
         </thead>
     {% for page in result["fail"] %}
         <tr>
-            <td class="ellipsis">{{ page["title"] }}</td>
+            <td class="limit-1">{{ page["title"] }}</td>
             <td>{{ page["reason"] }}</td>
         </tr>
     {% endfor %}
