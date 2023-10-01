@@ -4,6 +4,11 @@ title: No Title
 # Database to use (MySQL or SQLite are available options)
 database: SQLite
 
+# Flask Configuration
+Flask:
+  # Weather to display debug page
+  Debug: True
+
 # MySQL Database Configuration
 MySQL:
   # Name of the MySQL database
