@@ -61,11 +61,12 @@
         <tr>
             <th>作成者</th>
             <td>
-                {% for author in data.authors %}
                 <div class="tags">
-                <a href="{{ url_for('admin_bp.user_detail', id = author.id) }}" class="tag is-info is-light">{{ author.display_name }}</a>
+                    {% for author in data.authors %}
+                    <a href="{{ url_for('admin_bp.user_detail', id = author.id) }}" class="tag is-info is-light">{{
+                        author.display_name }}</a>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </td>
         </tr>
         {% endif%}
