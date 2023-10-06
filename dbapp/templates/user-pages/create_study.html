@@ -4,7 +4,6 @@
 <h2>研究グループの作成</h2>
 <form id="form" action="{{ url_for('logined_bp.create_study') }}" method="post" enctype="multipart/form-data">
     {{ form.csrf_token }}
-    {{ form.summary() }}
     {{ form.before_title(value="") }}
     <div class="field">
         {% with messages = get_flashed_messages() %}

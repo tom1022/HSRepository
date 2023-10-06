@@ -10,7 +10,6 @@
     <form id="study_form" action="{{ url_for('logined_bp.edit_study_update', id = data.id) }}" method="post"
         enctype="multipart/form-data">
         {{ study_form.csrf_token }}
-        {{ study_form.summary }}
         {{ study_form.before_title(value=data.name) }}
         <div class="field">
             {% with messages = get_flashed_messages() %}

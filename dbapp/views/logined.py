@@ -30,7 +30,6 @@ def create_study():
 
             try:
                 form_title = form.title.data
-                form_summary = form.summary.data
                 form_raw_markdown = form.raw_markdown.data
                 form_tags = re.sub('(\[|\'|\]|\s)', '', form.tags.data).split(',')
                 form_field = int(form.field.data)
@@ -55,7 +54,6 @@ def create_study():
                 add_study = STUDIES(
                     id=id,
                     name=form_title,
-                    summary=form_summary,
                     raw_markdown=form_raw_markdown,
                     field=form_field,
                     tags=tag_list,
@@ -119,7 +117,6 @@ def edit_study_update(id):
     if study_form.validate_on_submit():
         try:
             form_title = study_form.title.data
-            form_summary = study_form.summary.data
             form_raw_markdown = study_form.raw_markdown.data
             form_tags = re.sub('(\[|\'|\]|\s)', '', study_form.tags.data).split(',')
             form_field = int(study_form.field.data)
@@ -139,7 +136,6 @@ def edit_study_update(id):
                 tag_list.append(TAGS.query.filter(TAGS.name == tag).first())
 
             study.name = form_title
-            study.summary = form_summary
             study.raw_markdown = form_raw_markdown
             study.field = form_field
             study.tags = tag_list
@@ -156,13 +152,15 @@ def edit_study_update(id):
 
         return redirect(url_for('logined_bp.edit_study', id=id))
 
+    summary = convertMarkdown(study.raw_markdown)
     return render_template(
         'user-pages/edit_study.html',
         title='研究グループの編集(エラー)',
         study_form=study_form,
         add_author_form=add_author_form,
         del_author_form=del_author_form,
-        data=study
+        data=study,
+        summary=summary
     )
 
 
@@ -192,13 +190,15 @@ def edit_study_del_author(id):
 
         return redirect(url_for('logined_bp.edit_study', id=id))
 
+    summary = convertMarkdown(study.raw_markdown)
     return render_template(
         'user-pages/edit_study.html',
         title='研究グループの編集(エラー)',
         study_form=study_form,
         add_author_form=add_author_form,
         del_author_form=del_author_form,
-        data=study
+        data=study,
+        summary=summary
     )
 
 @logined_bp.route('/edit_study/<id>/add_author', methods=['POST'])
@@ -227,13 +227,15 @@ def edit_study_add_author(id):
 
         return redirect(url_for('logined_bp.edit_study', id=id))
 
+    summary = convertMarkdown(study.raw_markdown)
     return render_template(
         'user-pages/edit_study.html',
         title='研究グループの編集(エラー)',
         study_form=study_form,
         add_author_form=add_author_form,
         del_author_form=del_author_form,
-        data=study
+        data=study,
+        summary=summary
     )
 
 @logined_bp.route('/edit_study/<parent_id>/upload', methods=['GET', 'POST'])
